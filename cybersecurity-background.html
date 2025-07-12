@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Background Effect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        .cli-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ff88;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 300px;
+            pointer-events: none;
+            z-index: 20;
+        }
+        
+        .control-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 20;
+        }
+        
+        .control-panel button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+        }
+        
+        .control-panel button:hover {
+            background: #00cc6a;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="cybersecurity-canvas"></canvas>
+        
+        <div class="content">
+            <div class="hero">
+                <h1>Secure System Dashboard</h1>
+                <p>Advanced cybersecurity monitoring in real-time</p>
+            </div>
+        </div>
+        
+        <div class="cli-overlay" id="cli-overlay">
+            <div id="phase-indicator">Phase 1/7</div>
+            <div id="logs"></div>
+        </div>
+        
+        <div class="control-panel">
+            <button onclick="cybersecurityEffect.restart()">Restart Sequence</button>
+        </div>
+    </div>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js"></script>
+    
+    <script>
+        class CybersecurityBackgroundEffect {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.currentPhase = 1;
+                this.logs = [];
+                this.phaseStartTime = 0;
+                
+                // Three.js objects
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.clock = new THREE.Clock();
+                
+                // Animation objects
+                this.binaryParticles = null;
+                this.virus = null;
+                this.radar = null;
+                this.agents = [];
+                
+                this.init();
+                this.startSequence();
+            }
+            
+            init() {
+                // Scene setup
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x0a0a0a);
+                
+                // Camera setup
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.z = 50;
+                
+                // Renderer setup
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: this.canvas, 
+                    antialias: true, 
+                    alpha: true 
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                
+                // Initialize ambient particles
+                this.initializeBinaryParticles();
+                
+                // Start animation loop
+                this.animate();
+                
+                // Handle window resize
+                window.addEventListener('resize', () => this.onWindowResize());
+            }
+            
+            onWindowResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            addLog(message) {
+                this.logs.push(`> ${message}`);
+                if (this.logs.length > 5) {
+                    this.logs.shift();
+                }
+                this.updateUI();
+            }
+            
+            updateUI() {
+                document.getElementById('phase-indicator').textContent = `Phase ${this.currentPhase}/7`;
+                const logsDiv = document.getElementById('logs');
+                logsDiv.innerHTML = this.logs.map((log, index) => 
+                    `<div style="opacity: ${1 - index * 0.2}">${log}</div>`
+                ).join('');
+            }
+            
+            initializeBinaryParticles() {
+                const particleCount = 200;
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(particleCount * 3);
+                const velocities = new Float32Array(particleCount * 3);
+                
+                for (let i = 0; i < particleCount * 3; i += 3) {
+                    positions[i] = (Math.random() - 0.5) * 100;
+                    positions[i + 1] = (Math.random() - 0.5) * 100;
+                    positions[i + 2] = (Math.random() - 0.5) * 20;
+                    
+                    velocities[i] = (Math.random() - 0.5) * 0.5;
+                    velocities[i + 1] = (Math.random() - 0.5) * 0.5;
+                    velocities[i + 2] = (Math.random() - 0.5) * 0.2;
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+                
+                const material = new THREE.PointsMaterial({
+                    color: 0x00ff88,
+                    size: 0.8,
+                    transparent: true,
+                    opacity: 0.6,
+                    blending: THREE.AdditiveBlending
+                });
+                
+                this.binaryParticles = new THREE.Points(geometry, material);
+                this.scene.add(this.binaryParticles);
+            }
+            
+            createVirus() {
+                const virusGroup = new THREE.Group();
+                const symbols = ['@', '!', '%', '#', '&', '*'];
+                
+                for (let i = 0; i < 15; i++) {
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = 64;
+                    canvas.height = 64;
+                    
+                    if (context) {
+                        context.fillStyle = '#ff3333';
+                        context.font = '24px monospace';
+                        context.textAlign = 'center';
+                        context.fillText(symbols[Math.floor(Math.random() * symbols.length)], 32, 40);
+                    }
+                    
+                    const texture = new THREE.CanvasTexture(canvas);
+                    const material = new THREE.SpriteMaterial({ 
+                        map: texture, 
+                        transparent: true,
+                        opacity: 0.1 + Math.random() * 0.3
+                    });
+                    
+                    const sprite = new THREE.Sprite(material);
+                    sprite.position.set(
+                        (Math.random() - 0.5) * 4,
+                        (Math.random() - 0.5) * 4,
+                        (Math.random() - 0.5) * 2
+                    );
+                    sprite.scale.set(2, 2, 1);
+                    virusGroup.add(sprite);
+                }
+                
+                virusGroup.position.set(
+                    (Math.random() - 0.5) * 60,
+                    (Math.random() - 0.5) * 60,
+                    (Math.random() - 0.5) * 10
+                );
+                
+                this.virus = virusGroup;
+                this.scene.add(virusGroup);
+            }
+            
+            createRadar() {
+                const radarGroup = new THREE.Group();
+                
+                // Create radar rings
+                for (let i = 1; i <= 3; i++) {
+                    const geometry = new THREE.RingGeometry(i * 15, i * 15 + 0.5, 64);
+                    const material = new THREE.MeshBasicMaterial({
+                        color: 0x00ff00,
+                        transparent: true,
+                        opacity: 0.3,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    const ring = new THREE.Mesh(geometry, material);
+                    ring.rotation.x = Math.PI / 2;
+                    radarGroup.add(ring);
+                }
+                
+                // Radar sweep line
+                const sweepGeometry = new THREE.PlaneGeometry(50, 0.2);
+                const sweepMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x00ff00,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const sweep = new THREE.Mesh(sweepGeometry, sweepMaterial);
+                sweep.rotation.x = Math.PI / 2;
+                radarGroup.add(sweep);
+                
+                this.radar = radarGroup;
+                this.scene.add(radarGroup);
+            }
+            
+            createAgents() {
+                if (!this.virus) return;
+                
+                const spawnPoints = [
+                    { x: -40, y: 30 }, { x: 40, y: 30 }, { x: -40, y: -30 }, { x: 40, y: -30 },
+                    { x: 0, y: 40 }, { x: 0, y: -40 }, { x: -30, y: 0 }, { x: 30, y: 0 }
+                ];
+                
+                spawnPoints.forEach((point) => {
+                    const agentGroup = new THREE.Group();
+                    
+                    for (let i = 0; i < 8; i++) {
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.width = 32;
+                        canvas.height = 32;
+                        
+                        if (context) {
+                            context.fillStyle = '#00aaff';
+                            context.font = '12px monospace';
+                            context.textAlign = 'center';
+                            context.fillText(Math.random() > 0.5 ? '1' : '0', 16, 20);
+                        }
+                        
+                        const texture = new THREE.CanvasTexture(canvas);
+                        const material = new THREE.SpriteMaterial({ 
+                            map: texture, 
+                            transparent: true 
+                        });
+                        
+                        const sprite = new THREE.Sprite(material);
+                        sprite.position.set(
+                            (i % 4 - 1.5) * 1.5,
+                            Math.floor(i / 4) * 1.5,
+                            0
+                        );
+                        sprite.scale.set(1, 1, 1);
+                        agentGroup.add(sprite);
+                    }
+                    
+                    agentGroup.position.set(point.x, point.y, 0);
+                    this.agents.push(agentGroup);
+                    this.scene.add(agentGroup);
+                });
+            }
+            
+            updateBinaryParticles(deltaTime) {
+                if (!this.binaryParticles) return;
+                
+                const positions = this.binaryParticles.geometry.attributes.position.array;
+                const velocities = this.binaryParticles.geometry.attributes.velocity.array;
+                
+                for (let i = 0; i < positions.length; i += 3) {
+                    positions[i] += velocities[i] * deltaTime * 20;
+                    positions[i + 1] += velocities[i + 1] * deltaTime * 20;
+                    positions[i + 2] += velocities[i + 2] * deltaTime * 20;
+                    
+                    if (Math.abs(positions[i]) > 50) velocities[i] *= -1;
+                    if (Math.abs(positions[i + 1]) > 50) velocities[i + 1] *= -1;
+                    if (Math.abs(positions[i + 2]) > 10) velocities[i + 2] *= -1;
+                }
+                
+                this.binaryParticles.geometry.attributes.position.needsUpdate = true;
+            }
+            
+            updateVirus(deltaTime, phaseTime) {
+                if (!this.virus) return;
+                
+                // Stealth movement
+                this.virus.position.x += Math.sin(phaseTime * 0.5) * 0.1;
+                this.virus.position.y += Math.cos(phaseTime * 0.3) * 0.05;
+                
+                // Flickering opacity
+                this.virus.children.forEach((child) => {
+                    if (child.material) {
+                        child.material.opacity = 0.1 + Math.sin(phaseTime * 10 + Math.random()) * 0.3;
+                        
+                        // React to radar detection (phase 3+)
+                        if (this.currentPhase >= 3) {
+                            child.material.opacity *= 0.5;
+                        }
+                    }
+                });
+            }
+            
+            updateRadar(deltaTime, phaseTime) {
+                if (!this.radar) return;
+                
+                // Rotate radar sweep
+                if (this.radar.children[3]) {
+                    this.radar.children[3].rotation.z += deltaTime * 2;
+                }
+                
+                // Pulse rings
+                this.radar.children.forEach((child, index) => {
+                    if (index < 3 && child.material) {
+                        child.material.opacity = 0.2 + Math.sin(phaseTime * 3 + index) * 0.2;
+                    }
+                });
+            }
+            
+            updateAgents(deltaTime, phaseTime) {
+                if (!this.virus || this.agents.length === 0) return;
+                
+                const virusPos = this.virus.position;
+                
+                this.agents.forEach((agent) => {
+                    // Move agents toward virus
+                    const direction = new THREE.Vector3().subVectors(virusPos, agent.position).normalize();
+                    agent.position.add(direction.multiplyScalar(deltaTime * 10));
+                    
+                    // Add formation behavior
+                    agent.children.forEach((child, childIndex) => {
+                        child.position.x += Math.sin(phaseTime * 2 + childIndex) * 0.01;
+                    });
+                });
+            }
+            
+            updateTermination(deltaTime, phaseTime) {
+                if (!this.virus) return;
+                
+                // Virus destruction animation
+                this.virus.children.forEach((child) => {
+                    child.position.y += deltaTime * 5;
+                    if (child.material) {
+                        child.material.opacity = Math.max(0, 1 - phaseTime * 0.5);
+                    }
+                });
+                
+                // Create explosion particles
+                if (phaseTime < 1) {
+                    // Add explosion effect here if needed
+                }
+            }
+            
+            nextPhase() {
+                this.currentPhase++;
+                this.phaseStartTime = this.clock.getElapsedTime();
+                
+                switch (this.currentPhase) {
+                    case 2:
+                        this.createVirus();
+                        this.addLog("System monitoring initiated...");
+                        break;
+                    case 3:
+                        this.createRadar();
+                        this.addLog("Anomaly detected - initiating scan...");
+                        break;
+                    case 4:
+                        this.addLog("✴ Suspicious node signature verified");
+                        this.addLog("Threat level escalated: class B [worm.sig]");
+                        break;
+                    case 5:
+                        this.createAgents();
+                        this.addLog("Deploying security agents...");
+                        break;
+                    case 6:
+                        this.addLog("Code fragment injected...");
+                        this.addLog("☠️ Virus terminated");
+                        break;
+                    case 7:
+                        this.addLog("[✓] MachiNode System Status: SECURE");
+                        break;
+                }
+                
+                this.updateUI();
+            }
+            
+            resetScene() {
+                // Clean up objects
+                if (this.virus) {
+                    this.scene.remove(this.virus);
+                    this.virus = null;
+                }
+                if (this.radar) {
+                    this.scene.remove(this.radar);
+                    this.radar = null;
+                }
+                this.agents.forEach(agent => this.scene.remove(agent));
+                this.agents = [];
+                
+                this.logs = [];
+                this.updateUI();
+            }
+            
+            startSequence() {
+                this.currentPhase = 1;
+                this.phaseStartTime = this.clock.getElapsedTime();
+                this.resetScene();
+                this.updateUI();
+            }
+            
+            restart() {
+                this.startSequence();
+            }
+            
+            updatePhase(deltaTime, elapsedTime) {
+                const phaseTime = elapsedTime - this.phaseStartTime;
+                
+                switch (this.currentPhase) {
+                    case 1: // Ambient particles
+                        this.updateBinaryParticles(deltaTime);
+                        if (phaseTime > 3) this.nextPhase();
+                        break;
+                        
+                    case 2: // Virus appears
+                        this.updateBinaryParticles(deltaTime);
+                        this.updateVirus(deltaTime, phaseTime);
+                        if (phaseTime > 2) this.nextPhase();
+                        break;
+                        
+                    case 3: // Radar scanning
+                        this.updateBinaryParticles(deltaTime);
+                        this.updateVirus(deltaTime, phaseTime);
+                        this.updateRadar(deltaTime, phaseTime);
+                        if (phaseTime > 4) this.nextPhase();
+                        break;
+                        
+                    case 4: // Confirmation & Lock
+                        this.updateBinaryParticles(deltaTime);
+                        this.updateVirus(deltaTime, phaseTime);
+                        this.updateRadar(deltaTime, phaseTime);
+                        if (phaseTime > 2) this.nextPhase();
+                        break;
+                        
+                    case 5: // Agent deployment
+                        this.updateBinaryParticles(deltaTime);
+                        this.updateVirus(deltaTime, phaseTime);
+                        this.updateRadar(deltaTime, phaseTime);
+                        this.updateAgents(deltaTime, phaseTime);
+                        if (phaseTime > 5) this.nextPhase();
+                        break;
+                        
+                    case 6: // Digital termination
+                        this.updateBinaryParticles(deltaTime);
+                        this.updateTermination(deltaTime, phaseTime);
+                        if (phaseTime > 3) this.nextPhase();
+                        break;
+                        
+                    case 7: // Stabilization
+                        this.updateBinaryParticles(deltaTime);
+                        if (phaseTime > 2) {
+                            this.startSequence(); // Loop back to phase 1
+                        }
+                        break;
+                }
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                const deltaTime = this.clock.getDelta();
+                const elapsedTime = this.clock.getElapsedTime();
+                
+                this.updatePhase(deltaTime, elapsedTime);
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+        
+        // Initialize the effect when the page loads
+        let cybersecurityEffect;
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            cybersecurityEffect = new CybersecurityBackgroundEffect('cybersecurity-canvas');
+        });
+    </script>
+</body>
+</html>
